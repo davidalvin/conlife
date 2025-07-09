@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Structure Test</title>
+</head>
+<body>
+    <h1>Project Structure Test</h1>
+    <div id="status"></div>
+    
+    <script>
+        // Test if all files are accessible
+        const files = [
+            'css/styles.css',
+            'js/utils.js',
+            'js/game.js',
+            'js/ui.js',
+            'js/gameWorker.js'
+        ];
+        
+        const statusDiv = document.getElementById('status');
+        let loadedCount = 0;
+        
+        files.forEach(file => {
+            fetch(file)
+                .then(response => {
+                    if (response.ok) {
+                        loadedCount++;
+                        statusDiv.innerHTML += `<p style="color: green;">✅ ${file} - Loaded successfully</p>`;
+                    } else {
+                        statusDiv.innerHTML += `<p style="color: red;">❌ ${file} - Failed to load</p>`;
+                    }
+                })
+                .catch(error => {
+                    statusDiv.innerHTML += `<p style="color: red;">❌ ${file} - Error: ${error.message}</p>`;
+                })
+                .finally(() => {
+                    if (loadedCount === files.length) {
+                        statusDiv.innerHTML += `<h2 style="color: green;">🎉 All files loaded successfully!</h2>`;
+                        statusDiv.innerHTML += `<p>Project structure is correct. You can now run the main application.</p>`;
+                    }
+                });
+        });
+    </script>
+</body>
+</html> 

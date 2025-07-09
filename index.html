@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conway's Game of Life - Ultra Fast Enhanced</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <h1>Conway's Game of Life - Ultra Fast Enhanced</h1>
+    <div class="instructions">
+        <p><strong>🔥 Top boundary:</strong> Configurable boundary pattern</p>
+        <p><strong>🔴 Red line:</strong> Separates boundary from Game of Life</p>
+        <p><strong>⚡ Boundary Options:</strong> Nothing (empty), Flashing Pulse, or Solid Black</p>
+        <p>Black squares are alive, white squares are dead. Watch how different boundaries affect the Game of Life!</p>
+        <p><strong>📐 Current Grid:</strong> <span id="gridInfo">40 x 25 cells (32px each)</span></p>
+    </div>
+
+    <div class="controls">
+        <button id="startButton">🚀 Start Simulation</button>
+        <button id="resetButton">🔄 Reset</button>
+        <div class="speed-control">
+            <label for="speedSlider">Speed:</label>
+            <input type="range" id="speedSlider" min="1" max="1000" value="120">
+            <span class="speed-display" id="speedDisplay">120 FPS</span>
+        </div>
+        
+        <div class="boundary-control">
+            <label for="boundarySelect">Top Boundary:</label>
+            <select id="boundarySelect">
+                <option value="nothing">Nothing (Empty)</option>
+                <option value="pulse" selected>Flashing Pulse</option>
+                <option value="solid">Solid Black Line</option>
+            </select>
+        </div>
+        
+        <div class="boundary-control">
+            <label for="boundaryRows">Boundary Rows:</label>
+            <input type="number" id="boundaryRows" min="1" max="50" value="10" class="boundary-input">
+            <span style="margin-left: 10px; font-size: 0.9em;">rows</span>
+        </div>
+        
+        <div class="boundary-control">
+            <label for="pulseWidth">Pulse Pattern Width:</label>
+            <input type="number" id="pulseWidth" min="1" max="50" value="5" class="boundary-input">
+            <span style="margin-left: 10px; font-size: 0.9em;">cells</span>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-value" id="generationCount">0</div>
+            <div class="stat-label">Generation</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="liveCells">0</div>
+            <div class="stat-label">Live Cells</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="fps">0</div>
+            <div class="stat-label">Actual FPS</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">
+                <span id="pulseStatus">PULSE</span>
+                <span class="pulse-indicator" id="pulseIndicator"></span>
+            </div>
+            <div class="stat-label">Boundary Status</div>
+        </div>
+    </div>
+
+    <!-- Scripts in correct order -->
+    <script src="js/utils.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "conways-game-of-life",
+  "version": "1.0.0",
+  "description": "Interactive Conway's Game of Life with configurable boundaries",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server .",
+    "dev": "live-server . --port=3000"
+  },
+  "keywords": [
+    "conway",
+    "game-of-life",
+    "cellular-automata",
+    "p5js"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
