@@ -48,7 +48,6 @@ let boundaryRows = GAME_CONFIG.PULSE_ROWS;
 let pulseWidth = GAME_CONFIG.PULSE_WIDTH;
 
 let currentCells;
-let nextCells;
 let pulseArray;
 let columnCount;
 let rowCount;
@@ -94,7 +93,6 @@ function setup() {
         rowCount = GAME_CONFIG.SIMULATION_HEIGHT_CELLS;
 
         currentCells = createCellArray(columnCount * rowCount);
-        nextCells = createCellArray(columnCount * rowCount);
         pulseArray = createCellArray(columnCount * boundaryRows);
 
         initializeRandomPattern(currentCells, columnCount, rowCount, boundaryRows, activeCells);
@@ -115,31 +113,43 @@ function setupWorker() {
         console.log("Setting up Web Worker");
         gameWorker = new Worker('js/gameWorker.js');
         gameWorker.onmessage = function(e) {
-            // OPTIMIZATION: Handle worker response with transferred buffer
-            const { newCells, newActiveCells, liveCellCount } = e.data;
-            currentCells = newCells; // Take ownership of the transferred buffer
-            activeCells = new Set(newActiveCells);
+            const { activeCells: newActive, liveCellCount } = e.data;
+            activeCells = new Set(newActive);
             gameState.generation++;
             gameState.liveCells = liveCellCount;
-            
-            // OPTIMIZATION: Debounce DOM updates
+
             if (gameState.frameCount % gameState.domUpdateInterval === 0) {
                 document.getElementById('generationCount').textContent = gameState.generation;
                 document.getElementById('liveCells').textContent = liveCellCount;
             }
-            
-            renderCurrentState(); // <-- Draw after updating state
+
+            renderCurrentState();
         };
         gameWorker.onerror = function(error) {
             console.error("Web Worker error:", error);
         };
+
+        // Send initial state to the worker
+        gameWorker.postMessage({
+            command: 'init',
+            cells: currentCells,
+            activeCells: Array.from(activeCells),
+            columnCount,
+            rowCount,
+            boundaryRows,
+            boundaryType: gameState.boundaryType,
+            pulseWidth
+        }, [currentCells.buffer]);
+
+        // After transfer, we no longer keep currentCells locally
+        currentCells = createCellArray(columnCount * rowCount);
     } catch (error) {
         handleError(error, "setupWorker");
     }
 }
 
 // OPTIMIZATION: More efficient cell drawing using batching
-function drawCells(cells, startRow, endRow, cellSize) {
+function drawCells(startRow, endRow, cellSize) {
     noStroke();
     fill(0);
     
@@ -194,7 +204,7 @@ function renderCurrentState() {
     background(255);
     
     // OPTIMIZATION: Only draw active cells instead of entire grid
-    drawCells(currentCells, boundaryRows, rowCount, cellSize);
+    drawCells(boundaryRows, rowCount, cellSize);
     
     // Draw the boundary directly on the main canvas
     drawBoundary();
@@ -234,13 +244,13 @@ function mousePressed() {
             let row = Math.floor(mouseY / cellSize);
             if (isValidCell(col, row, columnCount, rowCount) && row >= boundaryRows) {
                 const index = getCellIndex(col, row);
-                currentCells[index] = 1 - currentCells[index];
-                if (currentCells[index] === 1) {
-                    activeCells.add(index);
-                } else {
+                if (activeCells.has(index)) {
                     activeCells.delete(index);
+                } else {
+                    activeCells.add(index);
                 }
                 document.getElementById('liveCells').textContent = activeCells.size;
+                gameWorker.postMessage({ command: 'toggle', index });
                 draw();
             }
         }
@@ -251,22 +261,12 @@ function mousePressed() {
 
 function updateGame() {
     if (gameState.isRunning) {
-        // OPTIMIZATION: Performance monitoring
         PerformanceMonitor.startMeasurement('worker-communication');
-        
-        // OPTIMIZATION: Create a copy of currentCells to avoid detached buffer issues
-        const cellsCopy = new Uint8Array(currentCells);
-        
         gameWorker.postMessage({
-            currentCells: cellsCopy,
-            activeCells: Array.from(activeCells), // Convert Set<number> to array
-            columnCount,
-            rowCount,
-            boundaryRows,
+            command: 'step',
             boundaryType: gameState.boundaryType,
             pulseWidth
-        }, [cellsCopy.buffer]); // Transfer ownership of the copy
-        
+        });
         PerformanceMonitor.endMeasurement('worker-communication');
     } else {
         draw();
@@ -289,15 +289,12 @@ function pauseSimulation() {
 function resetSimulation() {
     gameState.generation = 0;
     activeCells.clear();
-    currentCells.fill(0);
-    nextCells.fill(0);
     
     // Calculate grid dimensions
     columnCount = GAME_CONFIG.SIMULATION_WIDTH_CELLS;
     rowCount = GAME_CONFIG.SIMULATION_HEIGHT_CELLS;
     
     currentCells = createCellArray(columnCount * rowCount);
-    nextCells = createCellArray(columnCount * rowCount);
     pulseArray = createCellArray(columnCount * boundaryRows);
     boundaryGraphics = createGraphics(simWidth, boundaryRows * cellSize);
     
@@ -305,6 +302,20 @@ function resetSimulation() {
     initializeRandomPattern(currentCells, columnCount, rowCount, boundaryRows, activeCells);
     initializePulsePattern(pulseArray, columnCount, boundaryRows, pulseWidth);
     drawBoundary();
+
+    if (gameWorker) {
+        gameWorker.postMessage({
+            command: 'init',
+            cells: currentCells,
+            activeCells: Array.from(activeCells),
+            columnCount,
+            rowCount,
+            boundaryRows,
+            boundaryType: gameState.boundaryType,
+            pulseWidth
+        }, [currentCells.buffer]);
+        currentCells = createCellArray(columnCount * rowCount);
+    }
     
     document.getElementById('generationCount').textContent = '0';
     document.getElementById('liveCells').textContent = activeCells.size;
@@ -352,13 +363,26 @@ function resizeSimulation(newWidthCells, newHeightCells) {
     
     // Recreate arrays with new dimensions
     currentCells = createCellArray(columnCount * rowCount);
-    nextCells = createCellArray(columnCount * rowCount);
     pulseArray = createCellArray(columnCount * boundaryRows);
     
     // Reinitialize the simulation with new dimensions
     initializeRandomPattern(currentCells, columnCount, rowCount, boundaryRows, activeCells);
     initializePulsePattern(pulseArray, columnCount, boundaryRows, pulseWidth);
     drawBoundary();
+
+    if (gameWorker) {
+        gameWorker.postMessage({
+            command: 'init',
+            cells: currentCells,
+            activeCells: Array.from(activeCells),
+            columnCount,
+            rowCount,
+            boundaryRows,
+            boundaryType: gameState.boundaryType,
+            pulseWidth
+        }, [currentCells.buffer]);
+        currentCells = createCellArray(columnCount * rowCount);
+    }
     
     // Update UI without full reset
     document.getElementById('generationCount').textContent = '0';
