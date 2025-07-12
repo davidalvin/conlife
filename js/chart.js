@@ -1,6 +1,8 @@
 let liveChart;
 let stepCounter = 0;
 let sumLive = 0;
+let firstStepInWindow = null;
+
 function initializeChart() {
     const ctx = document.getElementById('liveChart').getContext('2d');
     liveChart = new Chart(ctx, {
@@ -18,25 +20,39 @@ function initializeChart() {
         options: {
             animation: false,
             scales: {
-                x: { title: { display: true, text: 'Steps' } },
+                x: { type: 'linear', title: { display: true, text: 'Steps' } },
                 y: { title: { display: true, text: 'Live Cells' } }
             },
             plugins: { legend: { display: false } }
         }
     });
 }
+
 function addLiveCells(step, count) {
     if (!liveChart) return;
+
+    if (stepCounter === 0) firstStepInWindow = step;
+
     sumLive += count;
     stepCounter++;
+
     if (stepCounter >= 100) {
         const avg = sumLive / stepCounter;
-        liveChart.data.datasets[0].data.push({ x: step, y: avg });
+        // Ensure x values are numbers
+        const numericFirst = Number(firstStepInWindow);
+        const numericStep = Number(step);
+        const xValue = numericFirst + Math.floor((numericStep - numericFirst) / 2);
+        console.log('addLiveCells x type:', typeof xValue, xValue); // Debug: should be number
+        liveChart.data.datasets[0].data.push({ x: xValue, y: avg });
         liveChart.update('none');
+
+        // reset state for next window
         stepCounter = 0;
         sumLive = 0;
+        firstStepInWindow = null;
     }
 }
+
 function resetChart() {
     if (liveChart) {
         liveChart.data.datasets[0].data = [];
@@ -44,5 +60,7 @@ function resetChart() {
     }
     stepCounter = 0;
     sumLive = 0;
+    firstStepInWindow = null;
 }
+
 window.ChartModule = { initializeChart, addLiveCells, resetChart };
