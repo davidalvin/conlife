@@ -217,4 +217,7 @@ window.UIModule = {
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded, initializing UI");
     initializeUI();
-}); 
+    if (window.ChartModule) {
+        ChartModule.initializeChart();
+    }
+});
