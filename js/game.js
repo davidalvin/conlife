@@ -120,6 +120,9 @@ function setupWorker() {
             activeCells = new Set(newActive);
             gameState.generation++;
             gameState.liveCells = liveCellCount;
+            if (window.ChartModule) {
+                ChartModule.addLiveCells(gameState.generation, liveCellCount);
+            }
 
             if (gameState.frameCount % gameState.domUpdateInterval === 0) {
                 document.getElementById('generationCount').textContent = gameState.generation;
@@ -300,6 +303,9 @@ function pauseSimulation() {
 function resetSimulation() {
     gameState.generation = 0;
     activeCells.clear();
+    if (window.ChartModule) {
+        ChartModule.resetChart();
+    }
     
     // Calculate grid dimensions
     columnCount = GAME_CONFIG.SIMULATION_WIDTH_CELLS;

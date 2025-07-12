@@ -186,4 +186,16 @@ h1 {
 @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.5; transform: scale(1.1); }
-} 
+}
+
+.chart-container {
+    width: 80%;
+    max-width: 800px;
+    margin-top: 20px;
+}
+
+#liveChart {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 10px;
+}
