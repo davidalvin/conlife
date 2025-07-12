@@ -29,7 +29,8 @@ function initializeRandomPattern(cells, columnCount, rowCount, pulseRows, active
             const index = getIndex(column, row, columnCount);
             cells[index] = Math.random() > 0.8 ? 1 : 0;
             if (cells[index] === 1) {
-                activeCells.add(`${column},${row}`);
+                // OPTIMIZATION: Use flattened index instead of string
+                activeCells.add(index);
             }
         }
     }
@@ -64,6 +65,42 @@ const PerformanceMonitor = {
     
     reset() {
         this.frameTimes = [];
+    },
+    
+    // OPTIMIZATION: Enhanced performance monitoring
+    startTime: 0,
+    measurements: [],
+    
+    startMeasurement(name) {
+        this.startTime = performance.now();
+    },
+    
+    endMeasurement(name) {
+        const duration = performance.now() - this.startTime;
+        this.measurements.push({ name, duration, timestamp: Date.now() });
+        
+        // Keep only last 100 measurements
+        if (this.measurements.length > 100) {
+            this.measurements.shift();
+        }
+        
+        return duration;
+    },
+    
+    getAverageTime(name) {
+        const relevant = this.measurements.filter(m => m.name === name);
+        if (relevant.length === 0) return 0;
+        const total = relevant.reduce((sum, m) => sum + m.duration, 0);
+        return total / relevant.length;
+    },
+    
+    logPerformance() {
+        console.log('Performance Summary:');
+        const names = [...new Set(this.measurements.map(m => m.name))];
+        names.forEach(name => {
+            const avg = this.getAverageTime(name);
+            console.log(`${name}: ${avg.toFixed(2)}ms average`);
+        });
     }
 };
 
