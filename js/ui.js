@@ -7,6 +7,7 @@ const DEFAULT_CONFIG = {
     pulseRows: 10,
     pulseWidth: 5,
     boundaryCondition: 'pulse',
+    pulseShift: 1,
     fpsUpdateInterval: 30
 };
 
@@ -19,6 +20,7 @@ const DOM = {
     boundarySelect: null,
     boundaryRowsInput: null,
     pulseWidthInput: null,
+    pulseShiftInput: null,
     generationCount: null,
     liveCells: null,
     fps: null,
@@ -35,6 +37,7 @@ function initializeDOMReferences() {
     DOM.boundarySelect = document.getElementById('boundarySelect');
     DOM.boundaryRowsInput = document.getElementById('boundaryRows');
     DOM.pulseWidthInput = document.getElementById('pulseWidth');
+    DOM.pulseShiftInput = document.getElementById('pulseShift');
     DOM.generationCount = document.getElementById('generationCount');
     DOM.liveCells = document.getElementById('liveCells');
     DOM.fps = document.getElementById('fps');
@@ -112,6 +115,11 @@ function setupBoundaryControls() {
             const newWidth = validateInput(this.value, 1, 50, DEFAULT_CONFIG.pulseWidth);
             GameModule.updatePulseWidth(newWidth);
         });
+
+        DOM.pulseShiftInput.addEventListener('input', function() {
+            const newShift = validateInput(this.value, 0, 50, DEFAULT_CONFIG.pulseShift);
+            GameModule.updatePulseShift(newShift);
+        });
     } catch (error) {
         handleError(error, "setupBoundaryControls");
     }
@@ -175,6 +183,7 @@ function initializeUI() {
         DOM.speedDisplay.textContent = `${DEFAULT_CONFIG.currentSpeed} FPS`;
         DOM.boundaryRowsInput.value = DEFAULT_CONFIG.pulseRows;
         DOM.pulseWidthInput.value = DEFAULT_CONFIG.pulseWidth;
+        DOM.pulseShiftInput.value = DEFAULT_CONFIG.pulseShift;
         DOM.boundarySelect.value = DEFAULT_CONFIG.boundaryCondition;
 
         // Initialize statistics

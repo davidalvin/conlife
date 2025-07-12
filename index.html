@@ -31,6 +31,7 @@
             <select id="boundarySelect">
                 <option value="nothing">Nothing (Empty)</option>
                 <option value="pulse" selected>Flashing Pulse</option>
+                <option value="shift">Shifting Pulse</option>
                 <option value="solid">Solid Black Line</option>
             </select>
         </div>
@@ -45,6 +46,12 @@
             <label for="pulseWidth">Pulse Pattern Width:</label>
             <input type="number" id="pulseWidth" min="1" max="50" value="5" class="boundary-input">
             <span style="margin-left: 10px; font-size: 0.9em;">cells</span>
+        </div>
+
+        <div class="boundary-control">
+            <label for="pulseShift">Pulse Shift:</label>
+            <input type="number" id="pulseShift" min="0" max="50" value="1" class="boundary-input">
+            <span style="margin-left: 10px; font-size: 0.9em;">cells/step</span>
         </div>
     </div>
 

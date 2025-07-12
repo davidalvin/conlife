@@ -14,6 +14,7 @@ An interactive Conway's Game of Life simulation built with p5.js, featuring conf
 
 ### Advanced Features
 - ✅ Flashing pulse boundary pattern
+- ✅ Shifting pulse boundary option
 - ✅ Configurable simulation dimensions
 - ✅ Variable boundary row count
 - ✅ Pulse pattern width control
@@ -54,9 +55,10 @@ An interactive Conway's Game of Life simulation built with p5.js, featuring conf
 - **FPS Display**: Shows current target frame rate
 
 **Boundary Configuration:**
-- **Top Boundary**: Choose between "Nothing (Empty)", "Flashing Pulse", or "Solid Black Line"
+- **Top Boundary**: Choose between "Nothing (Empty)", "Flashing Pulse", "Shifting Pulse", or "Solid Black Line"
 - **Boundary Rows**: Set the number of boundary rows (1-50)
 - **Pulse Pattern Width**: Control the width of the pulse pattern (1-50 cells)
+- **Pulse Shift**: Number of columns to shift the pulse each step
 
 **Simulation Size:**
 - **Simulation Width**: Adjust canvas width (100-1200 pixels)

@@ -20,7 +20,8 @@ const GAME_CONFIG = {
     BOUNDARY_TYPES: {
         NOTHING: 'nothing',
         PULSE: 'pulse',
-        SOLID: 'solid'
+        SOLID: 'solid',
+        SHIFT: 'shift'
     }
 };
 
@@ -46,6 +47,8 @@ let simHeight = GAME_CONFIG.SIMULATION_HEIGHT_CELLS * GAME_CONFIG.CELL_SIZE;
 let cellSize = GAME_CONFIG.CELL_SIZE;
 let boundaryRows = GAME_CONFIG.PULSE_ROWS;
 let pulseWidth = GAME_CONFIG.PULSE_WIDTH;
+let pulseOffset = 0;
+let pulseShiftAmount = 1;
 
 let currentCells;
 let pulseArray;
@@ -138,7 +141,8 @@ function setupWorker() {
             rowCount,
             boundaryRows,
             boundaryType: gameState.boundaryType,
-            pulseWidth
+            pulseWidth,
+            pulseOffset
         }, [currentCells.buffer]);
 
         // After transfer, we no longer keep currentCells locally
@@ -165,13 +169,14 @@ function drawCells(startRow, endRow, cellSize) {
 function drawBoundary() {
     try {
         if (gameState.boundaryType !== GAME_CONFIG.BOUNDARY_TYPES.NOTHING) {
-            if (gameState.boundaryType === GAME_CONFIG.BOUNDARY_TYPES.PULSE) {
-                // Draw pulse pattern directly on main canvas
+            if (gameState.boundaryType === GAME_CONFIG.BOUNDARY_TYPES.PULSE ||
+                gameState.boundaryType === GAME_CONFIG.BOUNDARY_TYPES.SHIFT) {
+                // Draw pulse pattern (flashing or shifting)
                 noStroke();
                 for (let col = 0; col < columnCount; col++) {
                     for (let row = 0; row < boundaryRows; row++) {
                         const index = getIndex(col, row, columnCount);
-                        const isPulseOn = Math.floor(col / pulseWidth) % 2 === 0;
+                        const isPulseOn = Math.floor((col + pulseOffset) / pulseWidth) % 2 === 0;
                         fill(isPulseOn ? 0 : 255);
                         square(col * cellSize, row * cellSize, cellSize);
                     }
@@ -262,10 +267,16 @@ function mousePressed() {
 function updateGame() {
     if (gameState.isRunning) {
         PerformanceMonitor.startMeasurement('worker-communication');
+        if (gameState.boundaryType === GAME_CONFIG.BOUNDARY_TYPES.PULSE) {
+            pulseOffset = (pulseOffset + pulseWidth) % (2 * pulseWidth);
+        } else if (gameState.boundaryType === GAME_CONFIG.BOUNDARY_TYPES.SHIFT) {
+            pulseOffset = (pulseOffset + pulseShiftAmount) % (2 * pulseWidth);
+        }
         gameWorker.postMessage({
             command: 'step',
             boundaryType: gameState.boundaryType,
-            pulseWidth
+            pulseWidth,
+            pulseOffset
         });
         PerformanceMonitor.endMeasurement('worker-communication');
     } else {
@@ -312,7 +323,8 @@ function resetSimulation() {
             rowCount,
             boundaryRows,
             boundaryType: gameState.boundaryType,
-            pulseWidth
+            pulseWidth,
+            pulseOffset
         }, [currentCells.buffer]);
         currentCells = createCellArray(columnCount * rowCount);
     }
@@ -379,7 +391,8 @@ function resizeSimulation(newWidthCells, newHeightCells) {
             rowCount,
             boundaryRows,
             boundaryType: gameState.boundaryType,
-            pulseWidth
+            pulseWidth,
+            pulseOffset
         }, [currentCells.buffer]);
         currentCells = createCellArray(columnCount * rowCount);
     }
@@ -409,10 +422,18 @@ function updatePulseWidth(newWidth) {
     }
 }
 
+function updatePulseShift(newShift) {
+    pulseShiftAmount = newShift;
+    if (!gameState.isRunning) {
+        draw();
+    }
+}
+
 function updateBoundaryCondition(newCondition) {
     gameState.boundaryType = validateBoundaryCondition(newCondition);
     document.getElementById('pulseStatus').textContent = gameState.boundaryType.toUpperCase();
     initializePulsePattern(pulseArray, columnCount, boundaryRows, pulseWidth);
+    pulseOffset = 0;
     if (!gameState.isRunning) {
         draw();
     }
@@ -476,6 +497,7 @@ window.GameModule = {
     resizeSimulation,
     updateBoundaryRows,
     updatePulseWidth,
+    updatePulseShift,
     updateBoundaryCondition,
     updateSpeed,
     updateCellSize,

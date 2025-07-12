@@ -6,6 +6,7 @@ let rowCount = 0;
 let boundaryRows = 0;
 let boundaryType = 'pulse';
 let pulseWidth = 5;
+let pulseOffset = 0;
 let activeCells = new Set();
 
 const neighborOffsets = [
@@ -33,8 +34,8 @@ function countNeighbors(column, row) {
             continue;
         } else if (newRow < boundaryRows && boundaryType !== 'nothing') {
             if (newCol >= 0 && newCol < columnCount) {
-                if (boundaryType === 'pulse') {
-                    count += Math.floor(newCol / pulseWidth) % 2 === 0 ? 1 : 0;
+                if (boundaryType === 'pulse' || boundaryType === 'shift') {
+                    count += Math.floor((newCol + pulseOffset) / pulseWidth) % 2 === 0 ? 1 : 0;
                 } else if (boundaryType === 'solid') {
                     count += 1;
                 }
@@ -98,12 +99,14 @@ self.onmessage = function(e) {
         boundaryRows = data.boundaryRows;
         boundaryType = data.boundaryType;
         pulseWidth = data.pulseWidth;
+        pulseOffset = data.pulseOffset || 0;
         activeCells = new Set(data.activeCells);
         const liveCount = activeCells.size;
         self.postMessage({ activeCells: Array.from(activeCells), liveCellCount: liveCount });
     } else if (data.command === 'step') {
         boundaryType = data.boundaryType;
         pulseWidth = data.pulseWidth;
+        pulseOffset = data.pulseOffset || 0;
         const result = step();
         self.postMessage(result);
     } else if (data.command === 'toggle') {
