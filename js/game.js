@@ -1,8 +1,8 @@
 // Game configuration
 const GAME_CONFIG = {
     // Simulation size in Game of Life cells (grid units)
-    SIMULATION_WIDTH_CELLS: 1024,   // number of cells across
-    SIMULATION_HEIGHT_CELLS: 1024,  // number of cells down
+    SIMULATION_WIDTH_CELLS: 64,   // number of cells across
+    SIMULATION_HEIGHT_CELLS: 64,  // number of cells down
     
     // Cell size in pixels
     CELL_SIZE: 4,
